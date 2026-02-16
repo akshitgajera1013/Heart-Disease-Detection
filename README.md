@@ -48,13 +48,13 @@ Heart-Disease-Detection-KNN/
 ---
 
 ## ▶️ Run Locally
-1. Clone repository
+1. Clone repository :-
  https://github.com/akshitgajera1013/Heart-Disease-Detection.git
 
-2. Install dependencies
+2. Install dependencies :-
 pip install -r requirements.txt
 
-3. Run the app
+3. Run the app :-
 streamlit run app.py
 
 ## 🎯 Output
