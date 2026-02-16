@@ -1,5 +1,7 @@
 # Heart-Disease-Detection
 
+Deployment URL :- https://heart-disease-predictor-model.streamlit.app/
+
 # 🫀 Heart Disease Detection using K-Nearest Neighbors (KNN)
 A Machine Learning web application that predicts whether a patient has heart disease based on medical attributes.
 Built using **K-Nearest Neighbors (KNN)** algorithm and deployed with **Streamlit**.
