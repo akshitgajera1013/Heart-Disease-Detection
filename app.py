@@ -1,6 +1,14 @@
+# ============================================================
+# 🫀 Heart Health Intelligence Platform (Enterprise Edition)
+# Developed by Akshit Gajera
+# ============================================================
+
 import streamlit as st
 import numpy as np
 import pickle
+import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
 
 # ------------------------------------------------------------
 # PAGE CONFIG
@@ -8,235 +16,255 @@ import pickle
 st.set_page_config(
     page_title="Heart Health Intelligence",
     page_icon="🫀",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 # ------------------------------------------------------------
-# CUSTOM PREMIUM CSS
+# LOAD MODEL & SCALER
+# ------------------------------------------------------------
+@st.cache_resource
+def load_objects():
+    model = pickle.load(open("model.pkl", "rb"))
+    scaler = pickle.load(open("scaler.pkl", "rb"))
+    return model, scaler
+
+model, scaler = load_objects()
+
+# ------------------------------------------------------------
+# PREMIUM DARK MEDICAL UI
 # ------------------------------------------------------------
 st.markdown("""
 <style>
-html, body, [class*="css"] {
+.stApp {
+    background: linear-gradient(135deg,#0f172a,#1e293b);
     font-family: 'Segoe UI', sans-serif;
 }
-
-.stApp {
-    background: linear-gradient(135deg, #0f172a, #1e293b);
-}
-
-.header {
+.main-header {
+    font-size: 2.6rem;
+    font-weight: 800;
     text-align: center;
-    padding: 20px 0;
 }
-
-.title {
-    font-size: 42px;
-    font-weight: 700;
-    color: white;
-}
-
-.subtitle {
-    font-size: 18px;
+.sub-header {
+    text-align: center;
     color: #94a3b8;
+    margin-bottom: 2rem;
 }
-
 .card {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255,255,255,0.05);
     padding: 25px;
     border-radius: 18px;
     backdrop-filter: blur(12px);
-    box-shadow: 0 10px 35px rgba(0,0,0,0.4);
+    margin-bottom: 25px;
 }
-
-.predict-btn button {
+.kpi {
+    font-size: 60px;
+    font-weight: bold;
+    text-align: center;
+}
+.stButton>button {
     width: 100%;
     height: 55px;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
-    border-radius: 14px;
-    background: linear-gradient(90deg, #ef4444, #dc2626);
+    border-radius: 12px;
+    background: linear-gradient(90deg,#ef4444,#dc2626);
     color: white;
     border: none;
-}
-
-.result-card {
-    margin-top: 35px;
-    padding: 35px;
-    border-radius: 18px;
-    text-align: center;
-    font-size: 26px;
-    font-weight: 600;
-}
-
-.footer {
-    text-align: center;
-    margin-top: 60px;
-    font-size: 14px;
-    color: #94a3b8;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------
-# LOAD MODEL & SCALER
+# SIDEBAR
 # ------------------------------------------------------------
-model = pickle.load(open("model.pkl", "rb"))
-scaler = pickle.load(open("scaler.pkl", "rb"))
+with st.sidebar:
+    st.markdown("## 🫀 Project Overview")
+    st.info("""
+    Machine Learning-Based Heart Severity Prediction  
+    
+    Algorithm: KNN Regression  
+    Features: 13  
+    Scaling: StandardScaler  
+    """)
+
+    st.markdown("---")
+    st.metric("Model Type", "KNN")
+    st.metric("Prediction", "Severity Score")
+    st.metric("Deployment", "Streamlit")
 
 # ------------------------------------------------------------
 # HEADER
 # ------------------------------------------------------------
-st.markdown("""
-<div class="header">
-    <div class="title">🫀 Heart Health Intelligence</div>
-    <div class="subtitle">KNN Regression Model | Heart Severity Prediction</div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
+st.markdown('<div class="main-header">🫀 Heart Health Intelligence Platform</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">AI-Powered Cardiovascular Risk Assessment</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------
-# INPUT SECTION
+# TABS
 # ------------------------------------------------------------
-with st.container():
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+tab1, tab2, tab3, tab4 = st.tabs([
+    "Prediction",
+    "Analytics",
+    "Model Insights",
+    "Health Report"
+])
+
+# ============================================================
+# TAB 1 – PREDICTION
+# ============================================================
+with tab1:
+
+    st.markdown("### 🧬 Patient Information")
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
         age = st.number_input("Age", 1, 120, 45)
-
-        sex_label = st.selectbox("Sex", ["Male", "Female"])
-        sex = 1 if sex_label == "Male" else 0
-
-        cp_label = st.selectbox(
-            "Chest Pain Type",
-            ["Typical Angina", "Atypical Angina",
-             "Non-Anginal Pain", "Asymptomatic"]
-        )
-        cp_map = {
-            "Typical Angina": 0,
-            "Atypical Angina": 1,
-            "Non-Anginal Pain": 2,
-            "Asymptomatic": 3
-        }
-        cp = cp_map[cp_label]
-
+        sex = 1 if st.selectbox("Sex", ["Male", "Female"]) == "Male" else 0
+        cp = st.selectbox("Chest Pain Type", [0,1,2,3])
         trestbps = st.number_input("Resting Blood Pressure", 80, 200, 120)
 
     with col2:
         chol = st.number_input("Cholesterol", 100, 600, 200)
-
-        fbs_label = st.selectbox(
-            "Fasting Blood Sugar",
-            ["Normal (≤120 mg/dl)", "High (>120 mg/dl)"]
-        )
-        fbs = 1 if "High" in fbs_label else 0
-
-        restecg_label = st.selectbox(
-            "Resting ECG Result",
-            ["Normal", "ST-T Abnormality", "Left Ventricular Hypertrophy"]
-        )
-        restecg_map = {
-            "Normal": 0,
-            "ST-T Abnormality": 1,
-            "Left Ventricular Hypertrophy": 2
-        }
-        restecg = restecg_map[restecg_label]
-
-        thalach = st.number_input("Max Heart Rate Achieved", 60, 220, 150)
+        fbs = st.selectbox("Fasting Blood Sugar >120", [0,1])
+        restecg = st.selectbox("Resting ECG", [0,1,2])
+        thalach = st.number_input("Max Heart Rate", 60, 220, 150)
 
     with col3:
-        exang_label = st.selectbox("Exercise Induced Angina", ["No", "Yes"])
-        exang = 1 if exang_label == "Yes" else 0
+        exang = st.selectbox("Exercise Induced Angina", [0,1])
+        oldpeak = st.number_input("ST Depression", 0.0, 10.0, 1.0)
+        slope = st.selectbox("Slope", [0,1,2])
+        ca = st.selectbox("Major Vessels", [0,1,2,3])
+        thal = st.selectbox("Thalassemia", [1,2,3])
 
-        oldpeak = st.number_input("ST Depression (Oldpeak)", 0.0, 10.0, 1.0)
+    st.markdown("---")
 
-        slope_label = st.selectbox(
-            "Slope of ST Segment",
-            ["Upsloping", "Flat", "Downsloping"]
+    predict = st.button("🔍 Run AI Prediction")
+
+    if predict:
+
+        features = np.array([[age, sex, cp, trestbps, chol, fbs,
+                              restecg, thalach, exang, oldpeak,
+                              slope, ca, thal]])
+
+        scaled = scaler.transform(features)
+        prediction = model.predict(scaled)
+        severity_score = round(prediction[0], 2)
+
+        st.session_state["severity"] = severity_score
+
+        # Risk categorization
+        if severity_score < 0.75:
+            risk = "Low Risk"
+            color = "green"
+        elif severity_score < 1.75:
+            risk = "Moderate Risk"
+            color = "orange"
+        else:
+            risk = "High Risk"
+            color = "red"
+
+        st.markdown(
+            f"""
+            <div class="card">
+                <div class="kpi" style="color:{color};">{risk}</div>
+                <div style="text-align:center;">Severity Score: {severity_score}</div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
-        slope_map = {
-            "Upsloping": 0,
-            "Flat": 1,
-            "Downsloping": 2
+
+# ============================================================
+# TAB 2 – ANALYTICS
+# ============================================================
+with tab2:
+
+    if "severity" in st.session_state:
+
+        severity_score = st.session_state["severity"]
+
+        st.markdown("### 📊 Risk Gauge")
+
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=severity_score,
+            title={'text': "Heart Severity Score"},
+            gauge={
+                'axis': {'range': [0, 3]},
+                'bar': {'color': "red"},
+                'steps': [
+                    {'range': [0, 1], 'color': "#16a34a"},
+                    {'range': [1, 2], 'color': "#facc15"},
+                    {'range': [2, 3], 'color': "#dc2626"}
+                ]
+            }
+        ))
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.markdown("### 🧬 Feature Profile Radar")
+
+        radar_features = {
+            "Age": age/100,
+            "Cholesterol": chol/600,
+            "Blood Pressure": trestbps/200,
+            "Heart Rate": thalach/220,
+            "Oldpeak": oldpeak/10,
+            "Vessels": ca/3
         }
-        slope = slope_map[slope_label]
 
-        ca = st.selectbox("Number of Major Vessels", [0, 1, 2, 3])
+        radar_df = pd.DataFrame(dict(
+            r=list(radar_features.values()),
+            theta=list(radar_features.keys())
+        ))
 
-        thal_label = st.selectbox(
-            "Thalassemia Type",
-            ["Normal", "Fixed Defect", "Reversible Defect"]
-        )
-        thal_map = {
-            "Normal": 1,
-            "Fixed Defect": 2,
-            "Reversible Defect": 3
-        }
-        thal = thal_map[thal_label]
+        fig_radar = px.line_polar(radar_df, r='r', theta='theta', line_close=True)
+        fig_radar.update_traces(fill='toself')
+        fig_radar.update_layout(polar=dict(radialaxis=dict(range=[0,1])))
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.plotly_chart(fig_radar, use_container_width=True)
 
-# ------------------------------------------------------------
-# PREPARE FEATURES
-# ------------------------------------------------------------
-features = np.array([[age, sex, cp, trestbps, chol, fbs,
-                      restecg, thalach, exang, oldpeak,
-                      slope, ca, thal]])
-
-# ------------------------------------------------------------
-# PREDICT BUTTON
-# ------------------------------------------------------------
-st.markdown('<div class="predict-btn">', unsafe_allow_html=True)
-predict = st.button("🔍 Run AI Prediction")
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ------------------------------------------------------------
-# PREDICTION OUTPUT
-# ------------------------------------------------------------
-# ------------------------------------------------------------
-# PREDICTION OUTPUT
-# ------------------------------------------------------------
-if predict:
-    scaled = scaler.transform(features)
-    prediction = model.predict(scaled)
-    severity_score = round(prediction[0], 2)
-
-    # Convert score into user-friendly risk level
-    if severity_score < 0.75:
-        color = "#065f46"
-        title = "🟢 Low Risk"
-        description = "No significant signs of heart disease detected."
-    elif severity_score < 1.75:
-        color = "#92400e"
-        title = "🟡 Moderate Risk"
-        description = "Some risk indicators present. Medical consultation recommended."
     else:
-        color = "#7f1d1d"
-        title = "🔴 High Risk"
-        description = "High probability of heart disease. Immediate medical attention advised."
+        st.info("Run prediction first.")
 
-    st.markdown(f"""
-    <div class="result-card" style="background:{color};">
-        <div style="font-size:32px;">{title}</div>
-        <br>
-        <div style="font-size:18px; font-weight:400;">
-            {description}
-        </div>
-        <br><br>
-        <div style="font-size:14px; opacity:0.7;">
-            Model Score: {severity_score}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+# ============================================================
+# TAB 3 – MODEL INSIGHTS
+# ============================================================
+with tab3:
 
+    st.success("""
+    ✔ KNN handles non-linear medical patterns  
+    ✔ Scaled features improve distance-based learning  
+    ✔ Cholesterol & Blood Pressure strong indicators  
+    ✔ Exercise-induced angina important factor  
+    """)
+
+# ============================================================
+# TAB 4 – HEALTH REPORT
+# ============================================================
+with tab4:
+
+    if "severity" in st.session_state:
+
+        severity_score = st.session_state["severity"]
+
+        st.markdown("### 📝 Personalized Health Summary")
+
+        if severity_score < 1:
+            st.success("Your heart indicators appear stable. Maintain healthy lifestyle.")
+        elif severity_score < 2:
+            st.warning("Moderate risk detected. Consider regular health checkups.")
+        else:
+            st.error("High risk detected. Immediate medical consultation advised.")
+
+    else:
+        st.info("Run prediction to generate report.")
 
 # ------------------------------------------------------------
 # FOOTER
 # ------------------------------------------------------------
-st.markdown("""
-<div class="footer">
-Built with ❤️ by Akshit Gajera | Machine Learning Portfolio
-</div>
-""", unsafe_allow_html=True)
+st.markdown("---")
+st.markdown(
+    "<div style='text-align:center;color:#94a3b8;'>© 2026 Akshit Gajera | Heart Health Intelligence Platform</div>",
+    unsafe_allow_html=True
+)
