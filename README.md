@@ -54,23 +54,26 @@ The model is trained on medical attributes:
 
 ## ▶️ Run Locally
 1. Clone repository :-
- https://github.com/akshitgajera1013/Heart-Disease-Detection.git
+   
+         https://github.com/akshitgajera1013/Heart-Disease-Detection.git
 
 2. Install dependencies :-
-pip install -r requirements.txt
+   
+        pip install -r requirements.txt
 
 3. Run the app :-
-streamlit run app.py
+
+        streamlit run app.py
 
 ## 🎯 Output
-- ✅ Heart Disease Not Detected
-- ⚠️ Heart Disease Detected
+        - ✅ Heart Disease Not Detected
+        - ⚠️ Heart Disease Detected
 
 ## 💡 Future Improvements
-- Add probability score
-- Add model comparison
-- Deploy on Streamlit Cloud
-- Add visualization dashboard
+    - Add probability score
+    - Add model comparison
+    - Deploy on Streamlit Cloud
+    - Add visualization dashboard
 
 ## 👨‍💻 Author
 Akshit Gajera  
