@@ -6,6 +6,16 @@ Deployment URL :- https://heart-disease-predictor-model.streamlit.app/
 A Machine Learning web application that predicts whether a patient has heart disease based on medical attributes.
 Built using **K-Nearest Neighbors (KNN)** algorithm and deployed with **Streamlit**.
 
+
+#UI
+
+![Output](images/1.png)
+
+![Output](images/2.png)
+
+![Output](images/3.png)
+
+
 📁 Dataset Overview
 
 This project uses a Heart Disease Dataset that contains medical and physiological information of patients, aimed at predicting the presence of heart disease. The dataset includes various clinical parameters such as age, blood pressure, cholesterol levels, and heart-related test results.
